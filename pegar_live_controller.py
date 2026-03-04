@@ -5,10 +5,6 @@
 # https://developers.google.com/explorer-help/code-samples#python
 
 import os
-
-import googleapiclient.discovery
-import googleapiclient.errors
-import re
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 
