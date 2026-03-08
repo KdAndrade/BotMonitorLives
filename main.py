@@ -1,18 +1,58 @@
+import time
+import re
+from app.services.youtube_services import YoutubeServices
 from app.services.description_extractor import DescriptionExtractor
 from app.config.settings import Settings
 
 
-def main():
-    print(f"Iniciando monitoramento no canal")
+def extrair_link_presenca(descricao):
+    if not descricao:
+        return None
 
+    padrao = r"Lista de presença:\s*(https?://[^\s]+)"
+    resultado = re.search(padrao, descricao, re.IGNORECASE)
+
+    if resultado:
+        return resultado.group(1)
+    return None
+
+
+def main():
+    print("Iniciando o Bot de Monitorização\n")
+
+    youtube_services = YoutubeServices()
     extrator = DescriptionExtractor()
 
-    lista_de_lives = extrator.extrair_descricoes(channelId=Settings.channelId, query="news")
+    video_ids = youtube_services.buscarLive(Settings.channelId, "news")
 
-    if len(lista_de_lives) > 0:
-        print(f"\nDeu certo! live processada com sucesso.\n")
-    else:
-        print("\nNenhuma live encontrada ou não foi possível extrair os dados.")
+    if not video_ids:
+        print("Nenhuma live encontrada no canal neste momento.")
+        return
+
+    lives_monitoradas = video_ids.copy()
+
+    while len(lives_monitoradas) > 0:
+
+        for video_id in lives_monitoradas[:]:
+
+            descricao = extrator.obter_descricao_video(video_id)
+
+            link = extrair_link_presenca(descricao)
+
+            if link:
+                print(f"Link encontrado na live {video_id}!")
+                print(f"URL: {link}")
+
+                lives_monitoradas.remove(video_id)
+            else:
+                print("Link ainda não está disponível.")
+
+        if len(lives_monitoradas) > 0:
+            print("\nAguardando 60 segundos para a próxima verificação...\n")
+            time.sleep(60)
+
+    print("Monitorização concluída!")
+
 
 if __name__ == "__main__":
     main()
