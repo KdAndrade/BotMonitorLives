@@ -1,21 +1,25 @@
 import time
 import re
+import pywhatkit as kit
 from app.services.youtube_services import YoutubeServices
 from app.services.description_extractor import DescriptionExtractor
 from app.config.settings import Settings
-
 
 def extrair_link_presenca(descricao):
     if not descricao:
         return None
 
-    padrao = r"Lista de presença:\s*(https?://[^\s]+)"
+    padrao = r"📝 Registre sua presença na live: \s*(https?://[^\s]+)"
     resultado = re.search(padrao, descricao, re.IGNORECASE)
 
     if resultado:
         return resultado.group(1)
     return None
 
+def enviar_mensagem(link):
+    zapNumber = Settings.whatsappNumber;
+    kit.sendwhatmsg_instantly(zapNumber,
+                                f"Tome o link de presença: {link}" )
 
 def main():
     print("Iniciando o Bot de Monitorização\n")
@@ -28,7 +32,7 @@ def main():
     if not video_ids:
         print("Nenhuma live encontrada no canal neste momento.")
         return
-
+    
     lives_monitoradas = video_ids.copy()
 
     while len(lives_monitoradas) > 0:
@@ -46,6 +50,8 @@ def main():
                 lives_monitoradas.remove(video_id)
             else:
                 print("Link ainda não está disponível.")
+
+            enviar_mensagem(link)
 
         if len(lives_monitoradas) > 0:
             print("\nAguardando 60 segundos para a próxima verificação...\n")
